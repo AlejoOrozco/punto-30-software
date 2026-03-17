@@ -1,0 +1,51 @@
+.urgency {
+  background: linear-gradient(90deg, #0f1a0f, #162216, #0f1a0f);
+  border-top: 1px solid var(--border2);
+  border-bottom: 1px solid var(--border2);
+  padding: 16px 5%;
+  text-align: center;
+}
+
+.urgency-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.urgency-badge {
+  background: var(--red);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+.urgency-text {
+  font-size: 0.9rem;
+  color: var(--white);
+  font-weight: 600;
+}
+
+.urgency-text span {
+  color: var(--green2);
+}
+
+.urgency-cta {
+  background: var(--green);
+  color: var(--black);
+  padding: 8px 18px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.78rem;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.urgency-cta:hover {
+  background: var(--green3);
+}

@@ -1,0 +1,30 @@
+.ticker-wrap {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  padding: 9px 0;
+}
+
+.ticker-inner {
+  display: flex;
+  width: max-content;
+  animation: ticker 25s linear infinite;
+}
+
+.ticker-item {
+  white-space: nowrap;
+  padding: 0 32px;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ticker-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--green2);
+}

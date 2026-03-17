@@ -1,0 +1,16 @@
+#ann-bar {
+  background: var(--green);
+  color: var(--black);
+  text-align: center;
+  padding: 8px 16px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  position: relative;
+  z-index: 101;
+}
+
+#ann-bar a {
+  color: var(--black);
+  text-decoration: underline;
+}

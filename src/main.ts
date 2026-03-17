@@ -1,0 +1,33 @@
+import './styles/main.css';
+import './styles/layout.css';
+import './styles/ann-bar.css';
+import './styles/nav.css';
+import './styles/ticker.css';
+import './styles/hero.css';
+import './styles/urgency.css';
+import './styles/proof-bar.css';
+import './styles/services.css';
+import './styles/products.css';
+import './styles/steps.css';
+import './styles/trust.css';
+import './styles/reviews.css';
+import './styles/contact.css';
+import './styles/faq.css';
+import './styles/cta-final.css';
+import './styles/footer.css';
+import './styles/wa-float.css';
+import './styles/responsive.css';
+
+import { initRepairs } from './ts/repairs.ts';
+import { initCarousel } from './ts/carousel.ts';
+import { initFaq } from './ts/faq.ts';
+import { initNav } from './ts/nav.ts';
+import { initReveal } from './ts/reveal.ts';
+import { initCounters } from './ts/counters.ts';
+
+initRepairs();
+initCarousel();
+initFaq();
+initNav();
+initReveal();
+initCounters();
