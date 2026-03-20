@@ -149,6 +149,8 @@ export default function VideoScroll() {
     video.loop = false;
     video.preload = 'auto';
     video.style.transform = 'translateZ(0)';
+    video.setAttribute('webkit-playsinline', 'true');
+    video.setAttribute('x5-playsinline', 'true');
     // Desktop uses canvas; keep video out of the way (but still present for mobile).
     video.style.display = isMobile ? 'block' : 'none';
 
@@ -241,9 +243,38 @@ export default function VideoScroll() {
 
       ScrollTrigger.refresh();
       queueMicrotask(() => ScrollTrigger.update());
+
+      // Mobile low-power/autoplay policy workaround: try to prime the decoder.
+      if (isMobile) {
+        void video
+          .play()
+          .then(() => {
+            video.pause();
+          })
+          .catch((err) => {
+            console.warn('[VideoScroll] play() blocked on mobile', err);
+          });
+      }
+    };
+
+    const onCanPlay = () => {
+      if (isMobile) console.info('[VideoScroll] canplay');
+    };
+    const onEncrypted = () => {
+      if (isMobile) console.warn('[VideoScroll] encrypted stream event fired');
+    };
+    const onError = () => {
+      const code = video.error?.code ?? 'unknown';
+      console.error('[VideoScroll] video error code:', code, video.error);
+      if (isMobile) {
+        alert(`Error cargando video (code: ${code})`);
+      }
     };
 
     video.addEventListener('loadedmetadata', onLoadedMetadata);
+    video.addEventListener('canplay', onCanPlay);
+    video.addEventListener('encrypted', onEncrypted);
+    video.addEventListener('error', onError);
     initDesktopScrolly().catch(console.error);
 
     const setAlpha = (value: number) => {
@@ -335,6 +366,9 @@ export default function VideoScroll() {
       if (scrubRafRef.current) cancelAnimationFrame(scrubRafRef.current);
       if (heroAlphaRafRef.current) cancelAnimationFrame(heroAlphaRafRef.current);
       video.removeEventListener('loadedmetadata', onLoadedMetadata);
+      video.removeEventListener('canplay', onCanPlay);
+      video.removeEventListener('encrypted', onEncrypted);
+      video.removeEventListener('error', onError);
       window.removeEventListener('scroll', onFirstUserScroll);
       trigger?.kill();
       scrollyVideo?.destroy?.();
@@ -359,6 +393,7 @@ export default function VideoScroll() {
               }`}
               muted
               playsInline
+              autoPlay
               preload="auto"
               loop={false}
               suppressHydrationWarning
