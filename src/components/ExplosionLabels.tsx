@@ -5,15 +5,39 @@ type Chip = { readonly text: string; readonly className: string };
 type SectionLink = { readonly text: string; readonly id: string; readonly side: 'left' | 'right' };
 
 const EXPLOSION_CHIPS: readonly Chip[] = [
-  { text: 'Garantía real en todo', className: 'left-[8%] top-[18%] md:left-[10%] md:top-[22%]' },
-  { text: 'Mismo día, sin esperas', className: 'right-[8%] top-[18%] md:right-[12%] md:top-[22%]' },
-  { text: 'Diagnóstico 100% gratis', className: 'left-[6%] bottom-[30%] md:left-[10%] md:bottom-[26%]' },
+  {
+    text: 'Garantía real en todo',
+    className:
+      'max-md:left-[5%] max-md:top-[14%] md:left-[10%] md:top-[22%]',
+  },
+  {
+    text: 'Mismo día, sin esperas',
+    className:
+      'max-md:right-[5%] max-md:top-[14%] md:right-[12%] md:top-[22%]',
+  },
+  {
+    text: 'Diagnóstico 100% gratis',
+    className:
+      'max-md:left-1/2 max-md:-translate-x-1/2 max-md:top-[22%] md:left-[10%] md:bottom-[26%]',
+  },
 ];
 
 const HERO_STATS: readonly Chip[] = [
-  { text: '+500 equipos reparados', className: 'left-[5%] top-[45%] md:left-[8%] md:top-[50%]' },
-  { text: '4.4 calificacion en google', className: 'right-[5%] top-[45%] text-right md:right-[10%] md:top-[50%]' },
-  { text: 'sin cobros ocultos', className: 'right-[6%] bottom-[16%] md:right-[10%] md:bottom-[20%]' },
+  {
+    text: '+500 equipos reparados',
+    className:
+      'max-md:left-[5%] max-md:bottom-[22%] md:left-[8%] md:top-[50%]',
+  },
+  {
+    text: '4.4 calificacion en google',
+    className:
+      'max-md:right-[5%] max-md:bottom-[22%] max-md:text-right md:right-[10%] md:top-[50%] text-right',
+  },
+  {
+    text: 'sin cobros ocultos',
+    className:
+      'max-md:left-1/2 max-md:-translate-x-1/2 max-md:bottom-[14%] md:right-[10%] md:bottom-[20%]',
+  },
 ];
 
 const FRAME2_SECTIONS: readonly SectionLink[] = [
@@ -94,8 +118,10 @@ export function ExplosionLabels({ progress, heroAlpha, frame2Alpha }: Props) {
       {FRAME2_SECTIONS.map((item) => (
         <motion.div
           key={item.text}
-          className={`absolute z-[27] top-1/2 -translate-y-1/2 ${
-            item.side === 'left' ? 'left-[4%]' : 'right-[4%]'
+          className={`absolute z-[27] w-[min(100%,20rem)] max-md:left-1/2 max-md:w-[min(92vw,20rem)] max-md:-translate-x-1/2 md:top-1/2 md:w-auto md:-translate-y-1/2 ${
+            item.side === 'left'
+              ? 'max-md:top-[18%] max-md:text-center md:left-[4%] md:text-left'
+              : 'max-md:bottom-[18%] max-md:text-center md:right-[4%] md:text-right'
           }`}
           animate={{ opacity: frame2Alpha }}
           transition={SMOOTH_TRANSITION}
@@ -103,8 +129,8 @@ export function ExplosionLabels({ progress, heroAlpha, frame2Alpha }: Props) {
         >
           <button
             type="button"
-            className={`group block cursor-pointer transition-transform duration-300 hover:scale-[1.03] ${
-              item.side === 'right' ? 'text-right' : ''
+            className={`group block w-full cursor-pointer text-center transition-transform duration-300 hover:scale-[1.03] ${
+              item.side === 'right' ? 'md:text-right' : ''
             }`}
             onClick={() => document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth' })}
           >

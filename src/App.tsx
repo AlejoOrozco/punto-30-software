@@ -113,6 +113,15 @@ const ACCESSORIES: CardItem[] = [
   },
 ];
 
+const BRANDS = [
+  { name: 'Apple', icon: appleIcon },
+  { name: 'Samsung', icon: samsungIcon },
+  { name: 'Xiaomi', icon: xiaomiIcon },
+  { name: 'Motorola', icon: motorolaIcon },
+  { name: 'Huawei', icon: huaweiIcon },
+  { name: 'LG', icon: lgIcon },
+] as const;
+
 export default function App() {
   const pageRef = useRef<HTMLElement>(null);
 
@@ -190,25 +199,15 @@ export default function App() {
           </p>
         </Reveal>
 
-        <div
-          className="mx-auto mt-10 flex items-center justify-start gap-10 overflow-x-auto pb-2 md:justify-center
-                     [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
-          {[
-            { name: 'Apple', icon: appleIcon },
-            { name: 'Samsung', icon: samsungIcon },
-            { name: 'Xiaomi', icon: xiaomiIcon },
-            { name: 'Motorola', icon: motorolaIcon },
-            { name: 'Huawei', icon: huaweiIcon },
-            { name: 'LG', icon: lgIcon },
-          ].map((item, idx) => (
-            <Reveal key={item.name} delay={idx * 0.06}>
-              <div className="flex items-center gap-3 whitespace-nowrap">
+        <div className="brand-marquee mx-auto mt-10">
+          <div className="brand-track">
+            {[...BRANDS, ...BRANDS].map((item, idx) => (
+              <div key={`${item.name}-${idx}`} className="brand-item">
                 <img src={item.icon} alt={item.name} className="h-9 w-9 opacity-95" />
-                <div className="text-sm font-semibold tracking-wide text-white/90">{item.name}</div>
+                <span className="text-sm font-semibold tracking-wide text-white/90">{item.name}</span>
               </div>
-            </Reveal>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 

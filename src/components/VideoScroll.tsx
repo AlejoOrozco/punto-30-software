@@ -1,14 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import videoSrc from '../assets/punto30video.mp4';
+import videoSrcMobile from '../assets/punto30video.mp4';
+import videoSrcDesktop from '../assets/punto30video-desktop.mp4';
 import logoSrc from '../assets/punto30icon.webp';
 import { ExplosionLabels } from './ExplosionLabels.tsx';
 
 gsap.registerPlugin(ScrollTrigger);
 
+/** Mobile Safari only: extra spacing between seeks so decode can keep up. Desktop keeps full rAF rate. */
+const SAFARI_MOBILE_MIN_SEEK_INTERVAL_MS = 48;
+
 type ScrollyVideoInstance = {
-  setTargetTimePercent: (n: number, opts?: { jump?: boolean }) => void;
+  setTargetTimePercent: (n: number, opts?: { jump?: boolean; transitionSpeed?: number }) => void;
   destroy?: () => void;
   frames?: unknown[];
 };
@@ -18,6 +22,7 @@ type ScrollyVideoCtor = new (opts: Record<string, unknown>) => ScrollyVideoInsta
 export default function VideoScroll() {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
   const endGradientRef = useRef<HTMLDivElement>(null);
@@ -25,6 +30,7 @@ export default function VideoScroll() {
   const [isLoading, setIsLoading] = useState(true);
   const [scrubProgress, setScrubProgress] = useState(0);
   const [heroAlpha, setHeroAlpha] = useState(1);
+  const [isMobileView, setIsMobileView] = useState(false);
 
   const scrubRafRef = useRef(0);
   const heroAlphaRafRef = useRef(0);
@@ -48,27 +54,74 @@ export default function VideoScroll() {
   useEffect(() => {
     const wrapper = wrapperRef.current;
     const container = canvasRef.current;
+    const video = videoRef.current;
     const sticky = stickyRef.current;
-    if (!wrapper || !container) return;
+    if (!wrapper || !container || !video) return;
 
-    const videoReadyRef = { current: false };
+    const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(ua);
+    const isSafari =
+      /Safari/i.test(ua) && !/Chrome|CriOS|Chromium|Android/i.test(ua);
+    const safariMobileSeekThrottle = isSafari && isMobile;
+    setIsMobileView(isMobile);
+
+    /** False until `loadedmetadata` + valid duration — scroll can run, but we don't drive currentTime. */
+    const videoMetadataReadyRef = { current: false };
     const hasScrollStartedRef = { current: false };
-    const secondFramePercentRef = { current: 0.001 };
-    // Tracks whether a programmatic scroll snap is in progress (prevents re-triggering).
     const isSnappingRef = { current: false };
-    // true when user has been snapped to the end (frame 2), false when at start (frame 1).
     const atEndRef = { current: false };
 
-    let snapTimeoutId = 0;
+    /** Desktop scrolly-video instance (canvas/WebCodecs) */
+    let scrollyVideo: ScrollyVideoInstance | null = null;
+    const scrollyReadyRef = { current: false };
+    let scrollyReadyCheck: number | null = null;
+
+    let snapRafId = 0;
+    const snapEase = gsap.parseEase('power2.inOut');
+
+    /** Latest scroll-mapped percent [0,1] for the video timeline. */
+    const pendingPercentRef = { current: 0 };
+    let seekRafId = 0;
+    let lastSeekAppliedMs = 0;
+    // Desktop: coalesce scrolly seeks to rAF (avoid flooding).
+    let desktopScrubRaf = 0;
+    let pendingDesktopProgress: number | null = null;
 
     const snapTo = (targetY: number) => {
       isSnappingRef.current = true;
-      window.clearTimeout(snapTimeoutId);
-      window.scrollTo({ top: targetY, behavior: 'smooth' });
-      // Release the lock after the smooth-scroll animation settles (~800 ms).
-      snapTimeoutId = window.setTimeout(() => {
+      if (snapRafId) cancelAnimationFrame(snapRafId);
+
+      const startY = window.scrollY;
+      const dy = targetY - startY;
+      if (Math.abs(dy) < 3) {
         isSnappingRef.current = false;
-      }, 900);
+        ScrollTrigger.update();
+        return;
+      }
+
+      const durationMs = 1250;
+      const t0 = performance.now();
+
+      const loop = () => {
+        if (cancelled) {
+          snapRafId = 0;
+          return;
+        }
+        const rawT = Math.min(1, (performance.now() - t0) / durationMs);
+        const easedT = snapEase(rawT);
+        window.scrollTo(0, startY + dy * easedT);
+        ScrollTrigger.update();
+
+        if (rawT < 1) {
+          snapRafId = requestAnimationFrame(loop);
+        } else {
+          snapRafId = 0;
+          isSnappingRef.current = false;
+          ScrollTrigger.update();
+        }
+      };
+
+      snapRafId = requestAnimationFrame(loop);
     };
 
     const onFirstUserScroll = () => {
@@ -88,152 +141,199 @@ export default function VideoScroll() {
     }
     if (heroRef.current) gsap.set(heroRef.current, { opacity: 0 });
 
-    let scrollyVideo: ScrollyVideoInstance | null = null;
     let trigger: ScrollTrigger | null = null;
     let cancelled = false;
-    let readyCheck: number | null = null;
 
-    const init = async () => {
+    // --- Mobile <video> setup (mount) ---
+    video.loop = false;
+    video.preload = 'auto';
+    video.style.transform = 'translateZ(0)';
+    // Desktop uses canvas; keep video out of the way (but still present for mobile).
+    video.style.display = isMobile ? 'block' : 'none';
+
+    const initDesktopScrolly = async () => {
+      if (isMobile) return;
       const mod = await import('scrolly-video/dist/ScrollyVideo.js');
       const CtorUnknown = (mod as { default?: unknown }).default ?? mod;
-      if (typeof CtorUnknown !== 'function') {
-        throw new Error('ScrollyVideo constructor not found');
-      }
+      if (typeof CtorUnknown !== 'function') throw new Error('ScrollyVideo constructor not found');
       const Ctor = CtorUnknown as ScrollyVideoCtor;
-
-      const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
-      const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(ua);
 
       scrollyVideo = new Ctor({
         scrollyVideoContainer: container,
-        src: videoSrc,
+        src: videoSrcDesktop,
         trackScroll: false,
         cover: true,
         sticky: false,
         full: false,
         frameThreshold: 0,
         transitionSpeed: 8,
-        useWebCodecs: !isMobile,
+        useWebCodecs: true,
       });
 
-      readyCheck = window.setInterval(() => {
+      scrollyReadyCheck = window.setInterval(() => {
         if (cancelled) {
-          if (readyCheck) window.clearInterval(readyCheck);
+          if (scrollyReadyCheck) window.clearInterval(scrollyReadyCheck);
+          scrollyReadyCheck = null;
           return;
         }
-        if (container.querySelector('canvas')) {
+        const hasCanvas = Boolean(container.querySelector('canvas'));
+        if (hasCanvas) {
+          scrollyReadyRef.current = true;
           setIsLoading(false);
-          videoReadyRef.current = true;
-
-          const frames = scrollyVideo?.frames;
-          if (Array.isArray(frames) && frames.length > 1) {
-            secondFramePercentRef.current = 1 / frames.length;
-          }
-
-          const initialPercent = hasScrollStartedRef.current ? secondFramePercentRef.current : 0;
-          // Use default smooth animation (no jump:true) to avoid canvas freeze on rapid seeks.
-          scrollyVideo?.setTargetTimePercent(initialPercent);
-
           if (heroRef.current) {
             gsap.to(heroRef.current, { opacity: 1, duration: 0.8, ease: 'power2.out' });
           }
-
-          if (readyCheck) window.clearInterval(readyCheck);
-          readyCheck = null;
+          if (scrollyReadyCheck) window.clearInterval(scrollyReadyCheck);
+          scrollyReadyCheck = null;
+          ScrollTrigger.refresh();
+          queueMicrotask(() => ScrollTrigger.update());
         }
       }, 100);
-
-      const setAlpha = (value: number) => {
-        if (heroRef.current) {
-          heroRef.current.style.opacity = String(value);
-        }
-        queueHeroAlphaUpdate(value);
-      };
-
-      trigger = ScrollTrigger.create({
-        trigger: wrapper,
-        start: 'top top',
-        end: 'bottom bottom',
-        onUpdate: (self) => {
-          if (!videoReadyRef.current || !scrollyVideo) return;
-
-          const p = self.progress;
-          queueScrubUpdate(p);
-
-          const step = secondFramePercentRef.current || 0.001;
-          const earlyZone = Math.max(step * 8, 0.045);
-
-          let mappedProgress: number;
-          if (!hasScrollStartedRef.current) {
-            mappedProgress = 0;
-          } else if (p < earlyZone) {
-            mappedProgress = self.direction === -1 ? 0 : Math.max(step, p);
-          } else {
-            mappedProgress = p;
-          }
-
-          // No { jump: true } — letting scrolly-video's internal rAF animate toward the target
-          // prevents rapid frame-jumping that can freeze the canvas decoder.
-          scrollyVideo.setTargetTimePercent(mappedProgress);
-
-          if (endGradientRef.current) {
-            const endFade = gsap.utils.clamp(0, 1, (p - 0.92) / 0.08);
-            endGradientRef.current.style.opacity = String(endFade);
-          }
-
-          // --- Bilateral snap logic ---
-          // Forward snap: first tiny downward scroll → jump to end (frame 2).
-          if (
-            !isSnappingRef.current &&
-            !atEndRef.current &&
-            self.direction === 1 &&
-            p > 0.02 &&
-            p < 0.9
-          ) {
-            atEndRef.current = true;
-            // Immediately crossfade: hero out, frame-2 in.
-            setAlpha(0);
-            const endY =
-              wrapper.getBoundingClientRect().top +
-              window.scrollY +
-              wrapper.offsetHeight -
-              window.innerHeight;
-            snapTo(endY);
-          }
-
-          // Reverse snap: upward scroll from near the end → jump back to start (frame 1).
-          if (
-            !isSnappingRef.current &&
-            atEndRef.current &&
-            self.direction === -1 &&
-            p > 0.88
-          ) {
-            atEndRef.current = false;
-            // Immediately crossfade: frame-2 out, hero in.
-            setAlpha(1);
-            const startY = wrapper.getBoundingClientRect().top + window.scrollY;
-            snapTo(startY);
-          }
-
-          // During a snap the alpha is already set to its target; skip scroll-based calc.
-          if (!isSnappingRef.current) {
-            const FADE_START = 0.03;
-            const FADE_END = 0.20;
-            const frame2Opacity = gsap.utils.clamp(0, 1, (p - FADE_START) / (FADE_END - FADE_START));
-            setAlpha(1 - frame2Opacity);
-          }
-        },
-      });
     };
 
-    init().catch(console.error);
+    const applyVideoSeekFromPending = () => {
+      seekRafId = 0;
+      if (cancelled || !videoMetadataReadyRef.current) return;
+
+      if (video.seeking) {
+        seekRafId = requestAnimationFrame(applyVideoSeekFromPending);
+        return;
+      }
+
+      const duration = video.duration;
+      if (!Number.isFinite(duration) || duration <= 0.11) return;
+
+      const calculatedTime = pendingPercentRef.current * duration;
+      const cappedTime = Math.min(duration - 0.1, Math.max(0, calculatedTime));
+
+      if (safariMobileSeekThrottle) {
+        const now = performance.now();
+        if (now - lastSeekAppliedMs < SAFARI_MOBILE_MIN_SEEK_INTERVAL_MS) {
+          seekRafId = requestAnimationFrame(applyVideoSeekFromPending);
+          return;
+        }
+      }
+
+      if (Math.abs(video.currentTime - cappedTime) < 0.001) return;
+
+      lastSeekAppliedMs = performance.now();
+      video.currentTime = cappedTime;
+    };
+
+    const scheduleVideoSeek = () => {
+      if (seekRafId) return;
+      seekRafId = requestAnimationFrame(applyVideoSeekFromPending);
+    };
+
+    const onLoadedMetadata = () => {
+      const d = video.duration;
+      if (!Number.isFinite(d) || d <= 0.11) return;
+      videoMetadataReadyRef.current = true;
+      video.loop = false;
+      // Strict end cap on first paint (same rule as scroll-driven seeks).
+      video.currentTime = Math.min(d - 0.1, 0);
+      setIsLoading(false);
+
+      if (heroRef.current) {
+        gsap.to(heroRef.current, { opacity: 1, duration: 0.8, ease: 'power2.out' });
+      }
+
+      ScrollTrigger.refresh();
+      queueMicrotask(() => ScrollTrigger.update());
+    };
+
+    video.addEventListener('loadedmetadata', onLoadedMetadata);
+    initDesktopScrolly().catch(console.error);
+
+    const setAlpha = (value: number) => {
+      if (heroRef.current) {
+        heroRef.current.style.opacity = String(value);
+      }
+      queueHeroAlphaUpdate(value);
+    };
+
+    trigger = ScrollTrigger.create({
+      trigger: wrapper,
+      start: 'top top',
+      end: 'bottom bottom',
+      onUpdate: (self) => {
+        const p = self.progress;
+        queueScrubUpdate(p);
+
+        const mappedProgress = !hasScrollStartedRef.current ? 0 : p;
+
+        if (
+          !isSnappingRef.current &&
+          !atEndRef.current &&
+          self.direction === 1 &&
+          p > 0.02 &&
+          p < 0.9
+        ) {
+          atEndRef.current = true;
+          setAlpha(0);
+          const endY =
+            wrapper.getBoundingClientRect().top +
+            window.scrollY +
+            wrapper.offsetHeight -
+            window.innerHeight;
+          snapTo(endY);
+        }
+
+        if (
+          !isSnappingRef.current &&
+          atEndRef.current &&
+          self.direction === -1 &&
+          p > 0.88
+        ) {
+          atEndRef.current = false;
+          setAlpha(1);
+          const startY = wrapper.getBoundingClientRect().top + window.scrollY;
+          snapTo(startY);
+        }
+
+        if (!isSnappingRef.current) {
+          const FADE_START = 0.03;
+          const FADE_END = 0.2;
+          const frame2Opacity = gsap.utils.clamp(0, 1, (p - FADE_START) / (FADE_END - FADE_START));
+          setAlpha(1 - frame2Opacity);
+        }
+
+        if (endGradientRef.current) {
+          const endFade = gsap.utils.clamp(0, 1, (p - 0.92) / 0.08);
+          endGradientRef.current.style.opacity = String(endFade);
+        }
+
+        // Drive the appropriate renderer.
+        if (isMobile) {
+          if (!videoMetadataReadyRef.current) return;
+          pendingPercentRef.current = Math.max(0, Math.min(1, mappedProgress));
+          scheduleVideoSeek();
+          return;
+        }
+
+        if (!scrollyVideo || !scrollyReadyRef.current) return;
+        pendingDesktopProgress = Math.max(0, Math.min(1, mappedProgress));
+        if (!desktopScrubRaf) {
+          desktopScrubRaf = requestAnimationFrame(() => {
+            desktopScrubRaf = 0;
+            if (pendingDesktopProgress !== null && scrollyVideo) {
+              scrollyVideo.setTargetTimePercent(pendingDesktopProgress);
+            }
+            pendingDesktopProgress = null;
+          });
+        }
+      },
+    });
 
     return () => {
       cancelled = true;
-      window.clearTimeout(snapTimeoutId);
-      if (readyCheck) window.clearInterval(readyCheck);
+      if (seekRafId) cancelAnimationFrame(seekRafId);
+      if (snapRafId) cancelAnimationFrame(snapRafId);
+      if (desktopScrubRaf) cancelAnimationFrame(desktopScrubRaf);
+      if (scrollyReadyCheck) window.clearInterval(scrollyReadyCheck);
       if (scrubRafRef.current) cancelAnimationFrame(scrubRafRef.current);
       if (heroAlphaRafRef.current) cancelAnimationFrame(heroAlphaRafRef.current);
+      video.removeEventListener('loadedmetadata', onLoadedMetadata);
       window.removeEventListener('scroll', onFirstUserScroll);
       trigger?.kill();
       scrollyVideo?.destroy?.();
@@ -245,12 +345,27 @@ export default function VideoScroll() {
   return (
     <div ref={wrapperRef} className="relative h-[500vh]">
       <div ref={stickyRef} className="sticky top-0 relative h-screen w-full overflow-hidden bg-black">
-        {/* Mobile: scale 0.5, desktop: 0.8 */}
-        <div className="absolute inset-0 origin-center scale-[0.5] md:scale-[0.8]">
-          <div ref={canvasRef} className="absolute inset-0" />
+        <div
+          className={`absolute inset-0 origin-center ${
+            isMobileView ? 'scale-[1.7]' : 'scale-[1.5]'
+          } md:scale-[0.8]`}
+        >
+          <div ref={canvasRef} className="absolute inset-0">
+            <video
+              ref={videoRef}
+              className={`absolute inset-0 h-full w-full ${
+                isMobileView ? 'object-contain' : 'object-cover'
+              }`}
+              src={videoSrcMobile}
+              muted
+              playsInline
+              preload="auto"
+              loop={false}
+              suppressHydrationWarning
+            />
+          </div>
         </div>
 
-        {/* Subtle dim over bright frames for label readability */}
         <div
           className="absolute inset-0 z-[16] pointer-events-none bg-black"
           style={{ opacity: videoDimOpacity }}
@@ -277,7 +392,6 @@ export default function VideoScroll() {
           </div>
         )}
 
-        {/* SECTION 1 — Hero (video ~0%) */}
         <div
           ref={heroRef}
           className="absolute inset-0 z-30 flex flex-col items-center justify-center px-6 pointer-events-none

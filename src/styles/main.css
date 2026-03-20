@@ -107,6 +107,42 @@ body::-webkit-scrollbar {
   animation: review-scroll-right 120s linear infinite;
 }
 
+/* Brand marquee (Especialistas en alta gama) */
+.brand-marquee {
+  width: 100%;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  touch-action: none;
+}
+
+.brand-track {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  width: max-content;
+  animation: brand-scroll-left 28s linear infinite;
+  will-change: transform;
+  user-select: none;
+}
+
+.brand-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+@keyframes brand-scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
 @keyframes review-scroll-left {
   0% {
     transform: translateX(0);
@@ -130,12 +166,12 @@ body::-webkit-scrollbar {
   width: 340px;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
   padding: 24px;
   color: #f8fafc;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: 0 0 30px rgba(46, 204, 113, 0.08);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
 }
 
 .review-card:hover {
@@ -181,8 +217,23 @@ body::-webkit-scrollbar {
 
 @media (max-width: 640px) {
   .review-card {
-    min-width: 290px;
-    width: 290px;
-    padding: 20px;
+    min-width: 220px;
+    width: 220px;
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .review-quote {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .review-author {
+    font-size: 14px;
+  }
+
+  .review-meta,
+  .review-verified {
+    font-size: 12px;
   }
 }

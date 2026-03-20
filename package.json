@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "video:encode-desktop": "bash scripts/encode-desktop-scrub-video.sh"
   },
   "devDependencies": {
     "@types/react": "^19.2.14",

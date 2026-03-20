@@ -40,8 +40,8 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       ref={ref}
       {...rest}
       className={[
-        'absolute left-1/2 top-1/2 rounded-2xl border border-white/10 bg-black/80 backdrop-blur-md',
-        'shadow-[0_0_30px_rgba(46,204,113,0.08)] will-change-transform',
+        'absolute left-1/2 top-1/2 rounded-2xl border border-white/10 bg-white/[0.05] backdrop-blur-md',
+        'shadow-[0_10px_40px_rgba(0,0,0,0.6)] will-change-transform',
         '[backface-visibility:hidden] [transform-style:preserve-3d]',
         customClass,
         className,
@@ -267,8 +267,9 @@ const CardSwap: React.FC<CardSwapProps> = ({
       ref={containerRef}
       className="absolute bottom-0 right-0 origin-bottom-right overflow-visible
                  translate-x-[5%] translate-y-[20%]
-                 max-[768px]:scale-75 max-[768px]:translate-x-[25%] max-[768px]:translate-y-[25%]
-                 max-[480px]:scale-[0.55] max-[480px]:translate-x-[25%] max-[480px]:translate-y-[25%]"
+                 max-[768px]:left-1/2 max-[768px]:right-auto max-[768px]:bottom-auto max-[768px]:top-1/2
+                 max-[768px]:origin-center max-[768px]:-translate-x-1/2 max-[768px]:-translate-y-[40%] max-[768px]:scale-[0.84]
+                 max-[480px]:-translate-y-[36%] max-[480px]:scale-[0.68]"
       style={{ width, height, perspective: 900 }}
     >
       {rendered}

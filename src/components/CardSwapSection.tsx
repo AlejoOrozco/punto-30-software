@@ -107,14 +107,14 @@ export function CardSwapSection({
   );
 
   const cardsBlock = (
-    <div className="relative z-10 w-full lg:w-[62%]" style={{ height: 520 }}>
+    <div className="relative z-10 w-full lg:w-[62%]" style={{ height: 560 }}>
       <CardSwap
         cardDistance={50}
         verticalDistance={60}
         delay={2500}
         pauseOnHover={false}
-        width={340}
-        height={420}
+        width={380}
+        height={470}
         skewAmount={5}
         easing="elastic"
         onActiveChange={hasBg ? setActiveCard : undefined}

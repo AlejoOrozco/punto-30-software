@@ -17,34 +17,14 @@ declare module 'scrolly-video/dist/ScrollyVideo.js' {
 
   export default class ScrollyVideo {
     constructor(options: ScrollyVideoOptions);
-    setTargetTimePercent(percent: number, options?: { jump?: boolean; transitionSpeed?: number }): void;
+    setTargetTimePercent(
+      percent: number,
+      options?: { jump?: boolean; transitionSpeed?: number },
+    ): void;
     destroy(): void;
     currentTime: number;
     video: HTMLVideoElement;
+    frames?: unknown[];
   }
 }
 
-declare module 'scrolly-video/dist/ScrollyVideo.js' {
-  interface ScrollyVideoOptions {
-    scrollyVideoContainer: string | HTMLElement;
-    src: string;
-    trackScroll?: boolean;
-    cover?: boolean;
-    full?: boolean;
-    sticky?: boolean;
-    transitionSpeed?: number;
-    frameThreshold?: number;
-    useWebCodecs?: boolean;
-    debug?: boolean;
-  }
-
-  class ScrollyVideo {
-    constructor(options: ScrollyVideoOptions);
-    setTargetTimePercent(percent: number): void;
-    destroy(): void;
-    currentTime: number;
-    video: HTMLVideoElement;
-  }
-
-  export default ScrollyVideo;
-}
