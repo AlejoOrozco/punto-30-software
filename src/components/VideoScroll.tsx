@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import videoSrcMobile from '../assets/punto30video.mp4';
+import videoSrcMobileSafe from '../assets/punto30video-mobile-safe.mp4';
 import videoSrcDesktop from '../assets/punto30video-desktop.mp4';
 import logoSrc from '../assets/punto30icon.webp';
 import { ExplosionLabels } from './ExplosionLabels.tsx';
@@ -362,8 +363,8 @@ export default function VideoScroll() {
               loop={false}
               suppressHydrationWarning
             >
-              {/* Mobile compatibility: prefer ffmpeg-encoded H.264 source first. */}
-              <source src={videoSrcDesktop} type="video/mp4" />
+              {/* Mobile compatibility: prefer safe baseline H.264 encode first. */}
+              <source src={videoSrcMobileSafe} type="video/mp4" />
               <source src={videoSrcMobile} type="video/mp4" />
             </video>
           </div>
