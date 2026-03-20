@@ -146,6 +146,9 @@ const CardSwap: React.FC<CardSwapProps> = ({
 
     const swap = () => {
       if (order.current.length < 2) return;
+      // Prevent overlapping swaps: a second interval tick while the previous
+      // timeline is active causes cards to "drop again" then snap back.
+      if (tlRef.current?.isActive()) return;
 
       const [front, ...rest] = order.current;
       const elFront = refs[front].current;
@@ -185,6 +188,7 @@ const CardSwap: React.FC<CardSwapProps> = ({
 
       tl.call(() => {
         order.current = [...rest, front];
+        tlRef.current = null;
       });
     };
 

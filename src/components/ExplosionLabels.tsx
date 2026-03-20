@@ -34,7 +34,7 @@ const HERO_STATS: readonly Chip[] = [
       'max-md:right-[5%] max-md:bottom-[22%] max-md:text-right md:right-[10%] md:top-[50%] text-right',
   },
   {
-    text: 'sin cobros ocultos',
+    text: 'Sin cobros ocultos',
     className:
       'max-md:left-1/2 max-md:-translate-x-1/2 max-md:bottom-[14%] md:right-[10%] md:bottom-[20%]',
   },
