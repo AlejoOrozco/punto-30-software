@@ -356,13 +356,16 @@ export default function VideoScroll() {
               className={`absolute inset-0 h-full w-full ${
                 isMobileView ? 'object-contain' : 'object-cover'
               }`}
-              src={videoSrcMobile}
               muted
               playsInline
               preload="auto"
               loop={false}
               suppressHydrationWarning
-            />
+            >
+              {/* Mobile compatibility: prefer ffmpeg-encoded H.264 source first. */}
+              <source src={videoSrcDesktop} type="video/mp4" />
+              <source src={videoSrcMobile} type="video/mp4" />
+            </video>
           </div>
         </div>
 
