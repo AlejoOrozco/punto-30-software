@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import CardSwap, { Card } from './CardSwap.tsx';
 import { Reveal } from './Reveal.tsx';
 
@@ -53,7 +53,7 @@ interface CardSwapSectionProps {
   id: string;
   label: string;
   heading: string;
-  subtitle: string;
+  subtitle: ReactNode;
   items: CardItem[];
 }
 

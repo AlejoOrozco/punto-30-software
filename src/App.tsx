@@ -153,7 +153,19 @@ export default function App() {
         id="servicios"
         label="Servicios"
         heading="Nuestros servicios"
-        subtitle="Reparaciones profesionales con piezas de alta calidad, garantía real y entrega el mismo día."
+        subtitle={
+          <>
+            Si no estás seguro de qué reparación necesitas,{' '}
+            <a
+              href="https://wa.me/573125820019"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-[#2ECC71] underline decoration-[#2ECC71]/60 underline-offset-4 hover:decoration-[#2ECC71]"
+            >
+              contáctanos
+            </a>
+          </>
+        }
         items={SERVICES}
       />
 
@@ -168,7 +180,19 @@ export default function App() {
         id="accesorios"
         label="Accesorios"
         heading="Nuestros accesorios"
-        subtitle="Todo lo que necesitas para proteger, cargar y potenciar tu dispositivo."
+        subtitle={
+          <>
+            Si no encuentras lo que necesitas,{' '}
+            <a
+              href="https://wa.me/573125820019"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-[#2ECC71] underline decoration-[#2ECC71]/60 underline-offset-4 hover:decoration-[#2ECC71]"
+            >
+              contáctanos
+            </a>
+          </>
+        }
         items={ACCESSORIES}
       />
 
