@@ -29,7 +29,7 @@ const HERO_STATS: readonly Chip[] = [
       'max-md:left-[5%] max-md:bottom-[22%] md:left-[8%] md:top-[50%]',
   },
   {
-    text: '4.4 calificacion en google',
+    text: '4.9 calificación en Google',
     className:
       'max-md:right-[5%] max-md:bottom-[22%] max-md:text-right md:right-[10%] md:top-[50%] text-right',
   },
