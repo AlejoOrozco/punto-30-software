@@ -229,7 +229,7 @@ export default function App() {
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#94A3B8]">Dirección</p>
                   <p className="mt-1 text-xl font-bold">Bogotá, Colombia</p>
-                  <p className="mt-1 text-sm text-[#94A3B8]">Calle 13 #15-51, Bogotá, Colombia, 111411</p>
+                  <p className="mt-1 text-sm text-[#94A3B8]">Calle 13 #15-51, 111411</p>
                 </div>
               </div>
 
@@ -238,7 +238,7 @@ export default function App() {
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#94A3B8]">Horario de atención</p>
                   <p className="mt-1 text-xl font-bold">Lun–Sáb: 9:00 am – 7:00 pm</p>
-                  <p className="mt-1 text-sm text-[#94A3B8]">Domingos: 10:00 am – 4:00 pm</p>
+                  <p className="mt-1 text-xl font-bold">Domingos: 10:00 am – 4:00 pm</p>
                 </div>
               </div>
 
