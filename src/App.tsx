@@ -253,6 +253,7 @@ export default function App() {
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#94A3B8]">Dirección</p>
                   <p className="mt-1 text-xl font-bold">Bogotá, Colombia</p>
+                  <p className="mt-1 text-sm text-[#94A3B8]">Local 056, CC Capital Alta Tecnología</p>
                   <p className="mt-1 text-sm text-[#94A3B8]">Calle 13 #15-51, 111411</p>
                 </div>
               </div>
@@ -313,7 +314,15 @@ export default function App() {
         </div>
 
         <p className="mx-auto mt-10 max-w-6xl text-center text-xs text-[#94A3B8]">
-          Sitio web creado por el equipo de SimpLexaLabs
+          Sitio web creado por el equipo de{' '}
+          <a
+            href="https://simplexa-labs.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-[#2ECC71] underline decoration-[#2ECC71]/50 underline-offset-2 transition hover:decoration-[#2ECC71]"
+          >
+            SimpLexaLabs
+          </a>
         </p>
       </section>
 

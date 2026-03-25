@@ -24,7 +24,7 @@ const EXPLOSION_CHIPS: readonly Chip[] = [
 
 const HERO_STATS: readonly Chip[] = [
   {
-    text: '+500 equipos reparados',
+    text: '+5000 equipos reparados',
     className:
       'max-md:left-[5%] max-md:bottom-[22%] md:left-[8%] md:top-[50%]',
   },

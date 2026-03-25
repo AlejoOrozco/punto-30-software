@@ -10,7 +10,10 @@ export default function Header() {
           <p className="truncate text-sm font-semibold tracking-wide text-white/90 md:text-base">
             Táctiles Punto 30
           </p>
-          <p className="truncate text-xs text-white/55 md:text-sm">Calle 13, Bogotá, Colombia</p>
+          <p className="max-w-[min(100%,20rem)] text-xs leading-snug text-white/55 md:text-sm">
+            <span className="block">Local 056, CC Capital Alta Tecnología</span>
+            <span className="block">Calle 13, Bogotá, Colombia</span>
+          </p>
         </div>
 
         <a
